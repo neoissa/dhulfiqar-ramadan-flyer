@@ -418,19 +418,19 @@ export default function App() {
       
       {/* PERSONALIZATION PANEL */}
       <div className="w-full max-w-2xl mb-8 sm:mb-12 p-6 sm:p-8 bg-[#063020]/60 border-2 border-[#C9A227]/40 rounded-[30px] sm:rounded-[50px] backdrop-blur-2xl space-y-4 sm:space-y-6 no-print shadow-2xl">
-    <div className="flex justify-between items-center mb-2">
-        <h4 className="text-[#C9A227] text-xs sm:text-base font-black uppercase tracking-[4px] drop-shadow-md">Unit 1318 Profile</h4>
-        <button 
-            onClick={saveProgress}
-            disabled={isSaving}
-            className="flex items-center gap-2 bg-[#C9A227] text-[#063020] px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest hover:brightness-110 transition-all disabled:opacity-50"
-        >
-            {isSaving ? <Loader2 size={12} className="animate-spin" /> : <Save size={12} />}
-            {isSaving ? 'Saving...' : 'Save for this device'}
-        </button>
-    </div>
-    
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
+        <div className="flex justify-between items-center mb-2">
+            <h4 className="text-[#C9A227] text-xs sm:text-base font-black uppercase tracking-[4px] drop-shadow-md">Unit 1318 Profile</h4>
+            <button 
+                onClick={saveProgress}
+                disabled={isSaving}
+                className="flex items-center gap-2 bg-[#C9A227] text-[#063020] px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest hover:brightness-110 transition-all disabled:opacity-50"
+            >
+                {isSaving ? <Loader2 size={12} className="animate-spin" /> : <Save size={12} />}
+                {isSaving ? 'Saving...' : 'Save for this device'}
+            </button>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
             <div className="flex flex-col gap-1 text-white">
                 <label className="text-[10px] text-[#C9A227] uppercase font-black ml-1">Patrol Name</label>
                 <input value={tali3aName} onChange={(e) => setTali3aName(e.target.value)} placeholder="Tali3a Name" className="bg-black/40 border-2 border-[#C9A227]/30 rounded-xl px-4 py-2 text-white text-xs sm:text-sm outline-none focus:border-[#C9A227] transition-all" />
@@ -473,10 +473,10 @@ export default function App() {
                 <div className="flex items-center justify-between mb-8">
                     <Lantern className="w-16 sm:w-24 h-auto drop-shadow-[0_0_20px_rgba(201,162,39,0.6)]" />
                     <div className="flex flex-col items-center gap-2">
-                        <div className="w-24 h-24 sm:w-40 aspect-square rounded-full border-[6px] border-[#C9A227] overflow-hidden bg-[#063020] shadow-[0_0_50px_rgba(201,162,39,0.7)] relative flex items-center justify-center">
-                            {mainLogoSrc ? <img src={mainLogoSrc} className="w-full h-full object-cover" /> : <div className="text-[#C9A227] font-black text-xs uppercase">Dhulfiqar</div>}
+                        <div className="w-24 h-24 sm:w-40 sm:h-40 min-w-[6rem] min-h-[6rem] sm:min-w-[10rem] sm:min-h-[10rem] aspect-square rounded-full border-[6px] border-[#C9A227] overflow-hidden bg-[#063020] shadow-[0_0_50px_rgba(201,162,39,0.7)] relative flex items-center justify-center flex-shrink-0">
+                            {mainLogoSrc ? <img src={mainLogoSrc} className="w-full h-full object-cover" /> : <div className="text-[#C9A227] font-black text-xs uppercase">Dhulfiqār</div>}
                         </div>
-                        <h1 className="text-[#C9A227] text-[8px] sm:text-xs font-black uppercase tracking-[4px] mt-2">Dhulfiqar Scout Team</h1>
+                        <h1 className="text-[#C9A227] text-[8px] sm:text-xs font-black uppercase tracking-[4px] mt-2">Dhulfiqār Scouts Team</h1>
                     </div>
                     <Lantern className="w-16 sm:w-24 h-auto scale-x-[-1] drop-shadow-[0_0_20px_rgba(201,162,39,0.6)]" />
                 </div>
@@ -536,7 +536,7 @@ export default function App() {
                 <div className="grid grid-cols-3 gap-2 items-center">
                     <div className="flex flex-col items-center gap-2">
                         <p className="text-sm sm:text-lg font-black text-[#063020] whitespace-nowrap">{String(tali3aName)}</p>
-                        <div className="w-16 h-16 sm:w-20 aspect-square rounded-[20px] border-2 border-[#063020]/40 overflow-hidden bg-[#063020] flex items-center justify-center">
+                        <div className="w-16 h-16 sm:w-20 sm:h-20 min-w-[4rem] min-h-[4rem] sm:min-w-[5rem] sm:min-h-[5rem] aspect-square rounded-full border-2 border-[#063020]/40 overflow-hidden bg-[#063020] flex items-center justify-center flex-shrink-0">
                             {footerLogoSrc ? <img src={footerLogoSrc} className="w-full h-full object-cover" /> : <span className="text-[#C9A227] font-black text-xs">LOGO</span>}
                         </div>
                     </div>
