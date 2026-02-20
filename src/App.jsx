@@ -5,16 +5,12 @@ import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged }
 import { getFirestore, doc, setDoc, getDoc } from 'firebase/firestore';
 
 // --- FIREBASE INITIALIZATION ---
-// Fallback for configuration to prevent crashing on Vercel if environment variables aren't set
-const firebaseConfig = typeof __firebase_config !== 'undefined' 
-  ? JSON.parse(__firebase_config) 
-  : { apiKey: "", authDomain: "", projectId: "", storageBucket: "", messagingSenderId: "", appId: "" };
-
+const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// FIX: Sanitize appId to ensure slashes don't break Firestore path segment counting (Rule 1)
+// FIX: Sanitize appId to ensure slashes do not break Firestore path segment counting (Resolves "7 segments" error)
 const rawAppId = typeof __app_id !== 'undefined' ? __app_id : 'dhulfiqar-ramadan-flyer';
 const appId = String(rawAppId).replace(/\//g, '_');
 
@@ -337,7 +333,7 @@ export default function App() {
   // 2. DATA LOAD (Ensuring Even Path Segments Rule 1)
   useEffect(() => {
     if (!user) return;
-    // Path: /artifacts/{appId}/users/{userId}/{collectionName}/{documentId}
+    // Standard path format: artifacts/{appId}/users/{userId}/profile/settings
     const docRef = doc(db, 'artifacts', appId, 'users', user.uid, 'profile', 'settings');
     getDoc(docRef).then((snap) => {
       if (snap.exists()) {
@@ -507,7 +503,7 @@ export default function App() {
                 <div className="flex items-center justify-between mb-8">
                     <Lantern className="w-16 sm:w-24 h-auto drop-shadow-[0_0_20px_rgba(201,162,39,0.6)]" />
                     <div className="flex flex-col items-center gap-2">
-                        <div className="w-24 h-24 sm:w-40 aspect-square rounded-full border-2 border-[#C9A227] overflow-hidden bg-[#063020] shadow-[0_0_50px_rgba(201,162,39,0.7)] relative flex items-center justify-center">
+                        <div className="w-24 h-24 sm:w-40 aspect-square rounded-full border-[6px] border-[#C9A227] overflow-hidden bg-[#063020] shadow-[0_0_50px_rgba(201,162,39,0.7)] relative flex items-center justify-center">
                             {mainLogoSrc ? <img src={mainLogoSrc} className="w-full h-full object-cover" /> : <div className="text-[#C9A227] font-black text-xs uppercase">Dhulfiqar</div>}
                         </div>
                         <h1 className="text-[#C9A227] text-[8px] sm:text-xs font-black uppercase tracking-[4px] mt-2">Dhulfiqar Scout Team</h1>
