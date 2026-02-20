@@ -1,8 +1,18 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, Download, FileText, Moon, Sun, Star, Compass, BookOpen, Heart, Shield, User, Users, Flag, Upload, X, Zap, Award, Book, Info } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Download, FileText, Moon, Sun, Star, Compass, BookOpen, Heart, Shield, User, Users, Flag, Upload, X, Zap, Award, Book, Info, Save, Loader2 } from 'lucide-react';
+import { initializeApp } from 'firebase/app';
+import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from 'firebase/auth';
+import { getFirestore, doc, setDoc, getDoc, onSnapshot } from 'firebase/firestore';
+
+// --- FIREBASE INITIALIZATION ---
+const firebaseConfig = JSON.parse(__firebase_config);
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const appId = typeof __app_id !== 'undefined' ? __app_id : 'dhulfiqar-ramadan-flyer';
 
 /* ════════════════════════════════════════════════════════════
-   30-DAY SCOUTING MAHDAWĪ CONTENT (FULLY UNIQUE 30 DAYS)
+   30-DAY SCOUTING MAHDAWĪ CONTENT
 ════════════════════════════════════════════════════════════ */
 const DAYS_DATA = [
   { day: 1, theme: "Niyyah", themeAr: "نِيَّة", title: "Pure Intentions", color: "#FF6B6B",
@@ -13,7 +23,7 @@ const DAYS_DATA = [
     scoutRelate: "A Scout is Reverent. Sincerity (Ikhlas) is the foundation of the Scout Oath. By purifying your Niyyah, you prepare your soul to be a sincere soldier of Imam al-Mahdi (aj).",
     dailyDuaAr: "اَللّهُمَّ اجْعَلْ نِيَّتي خَيْرَ النِّيّاتِ", dailyDuaEn: "O Allah, make my intention the best of intentions.", dailyDuaSource: "Sahifa Sajjadiya, Dua 20" },
   { day: 2, theme: "Taqwa", themeAr: "تَقْوى", title: "God-Consciousness", color: "#4D96FF",
-    verseAr: "يَا أَيُّهَا الَّذِينَ آمَنُوا كُتِبَ عَلَيْكُمُ الصِّيَامُ لَعَلَّكُمْ تَتَّقُونَ", verseEn: "\"O you who have believed, decreed upon you is fasting... that you may become righteous (Taqwa).\"", verseRef: "Surah Al-Baqarah 2:183",
+    verseAr: "يَا أَيُّهَا الَّذِينَ آمَنُوا كُتِبَ عَلَيْكُمُ الصِّيَامُ لَعَلَّكُمْ تَتَّقُونَ", verseEn: "\"O you who have believed, decreed upon you is fasting... that you may become righteousness (Taqwa).\"", verseRef: "Surah Al-Baqarah 2:183",
     salat: "Practice 'Hudhur al-Qalb' (presence of heart) in your Sajdah. Imagine you are whispering your secrets directly to your Creator.", salatSource: "Misbah al-Shariah",
     sawmHadis: "Imam Ali (a): 'Fasting is a shield against the fire.' Taqwa is the internal guard that keeps your soul safe from mistakes.", sawmSource: "Wasail al-Shia, Vol. 7",
     sadaqahHadis: "Imam al-Baqir (a): 'Sadaqah on the day of Jumu'ah is multiplied.' Let your Taqwa drive you to give even when it is difficult.", sadaqahSource: "Thawab al-A'mal",
@@ -90,7 +100,7 @@ const DAYS_DATA = [
     scoutRelate: "A Scout is Loyal. Loyalty starts at home with our families. A strong family structure is the building block of the Imam's (aj) society.",
     dailyDuaAr: "اَللّهُمَّ اغْفِرْ لي وَلِوالِدَيَّ", dailyDuaEn: "O Allah, forgive me and my parents.", dailyDuaSource: "Quran 71:28" },
   { day: 13, theme: "Haya", themeAr: "حَيَاء", title: "Modesty", color: "#8B5CF6",
-    verseAr: "وَاللَّهُ يَعْلَمُ مَا تُسِرُّونَ وَمَا تُعْلِنُونَ", verseEn: "\"And Allah knows what you conceal and what you declare.\"", verseRef: "Surah An-Nahl 16:19",
+    verseAr: "وَاللَّهُ يَعْلَمُ مَا تُسِرُّونَ وَمَا تُعْلِنُونَ", verseEn: "\"And Allah knows what you conceal and what you declare.\"", verseRef: "Surah An-Nahl 16:90",
     salat: "Lower your gaze during Salat. Haya before Allah means realizing His constant gaze upon your heart.", salatSource: "Sirr al-Salat",
     sawmHadis: "Imam Ali (a): 'The fast of the heart from bad thoughts is better than the fast of the stomach.' This is internal Haya.", sawmSource: "Ghurar al-Hikam",
     sadaqahHadis: "Imam Zain al-Abidin (a): 'When giving, lower your eyes so you do not see the humility in the receiver's face.'", sadaqahSource: "Sahifa Sajjadiya",
@@ -111,7 +121,7 @@ const DAYS_DATA = [
     scoutRelate: "A Scout is Brave. True courage is standing up for truth, like Imam Hassan (a). The Ansar of Al-Mahdi (aj) are described as having hearts like iron.",
     dailyDuaAr: "اَللّهُمَّ قَوِّ عَزيمَتي", dailyDuaEn: "O Allah, strengthen my resolve.", dailyDuaSource: "Dua Kumayl" },
   { day: 16, theme: "Tawakkul", themeAr: "تَوَكُّل", title: "Reliance on Allah", color: "#06B6D4",
-    verseAr: "وَمَن يَتَوَكَّلْ عَلَى اللَّهِ فَهُوَ حَسْبُهُ", verseEn: "\"And whoever relies upon Allah - then He is sufficient for him.\"", verseRef: "Surah At-Talaq 65:3",
+    verseAr: "وَمَن يَتَوَكَّلْ عَلَى LLَّهِ فَهُوَ حَسْبُهُ", verseEn: "\"And whoever relies upon Allah - then He is sufficient for him.\"", verseRef: "Surah At-Talaq 65:3",
     salat: "When bowing in Ruku, realize you are letting go of control and relying entirely on the Lord of the Worlds.", salatSource: "Al-Kafi, Vol. 3",
     sawmHadis: "Imam al-Jawad (a): 'Whoever relies on Allah, Allah provides for them from where they do not expect. Fasting builds this reliance.'", sawmSource: "Bihar al-Anwar",
     sadaqahHadis: "Imam al-Sadiq (a): 'Sadaqah does not decrease wealth; have Tawakkul when giving.'", sadaqahSource: "Al-Kafi",
@@ -167,7 +177,7 @@ const DAYS_DATA = [
     scoutRelate: "A Scout is Brave. We honor the Shahada of Imam Ali (a). A true Scout is ready to sacrifice everything for truth and justice alongside the Mahdi (aj).",
     dailyDuaAr: "اَللّهُمَّ ارْزُقْني الشَّهادَةَ في سَبيلِكَ", dailyDuaEn: "O Allah, grant me martyrdom in Your path.", dailyDuaSource: "Dua of the 12th Imam" },
   { day: 24, theme: "Mahabba", themeAr: "مَحَبَّة", title: "Divine Love", color: "#F06292",
-    verseAr: "قُلْ إِن كُنتُمْ تُحِبُّونَ اللَّهَ فَاتَّبِعُونِي يُحْبِبْكُمُ اللَّهُ", verseEn: "\"Say, 'If you should love Allah, then follow me, [so] Allah will love you...\"", verseRef: "Surah Ali 'Imran 3:31",
+    verseAr: "قُل| إِن كُنتُمْ تُحِبُّونَ اللَّهَ فَاتَّبِعُونِي يُحْبِبْكُمُ اللَّهُ", verseEn: "\"Say, 'If you should love Allah, then follow me, [so] Allah will love you...\"", verseRef: "Surah Ali 'Imran 3:31",
     salat: "Pray not out of fear, but out of Mahabba (Love). Let your heart soar towards the Beloved during Sajdah.", salatSource: "Uddat al-Da'i",
     sawmHadis: "Imam al-Sadiq (a): 'Is religion anything but love?' We fast because we love the command of Allah.", sawmSource: "Al-Kafi",
     sadaqahHadis: "The Prophet (s): 'Give gifts to one another, for gifts wash away hatred and build love.'", sadaqahSource: "Nahj al-Fasahah",
@@ -207,7 +217,7 @@ const DAYS_DATA = [
     sawmHadis: "The Prophet (s): 'Ramadan brings the Ridwan of Allah to those who complete it with faith and accountability.'", sawmSource: "Amali al-Saduq",
     sadaqahHadis: "Imam Ali (a): 'A small charity given seeking His pleasure is heavier than a mountain of gold given for show.'", sadaqahSource: "Nahj al-Balagha",
     scoutRelate: "A Scout is Obedient. We do our duty not for badges, but to seek the pleasure of Allah and His Wali (aj).",
-    dailyDuaAr: "اَللّهُمَّ إِنّي أَسْأَلُكَ رِضاكَ وَالجَنَّةَ", dailyDuaEn: "O Allah, I ask You for Your pleasure and Paradise.", dailyDuaSource: "Dua Abu Hamza" },
+    dailyDuaAr: "اَللّهُمَّ إِنّي أَSْأَلُكَ رِضاكَ وَالجَنَّةَ", dailyDuaEn: "O Allah, I ask You for Your pleasure and Paradise.", dailyDuaSource: "Dua Abu Hamza" },
   { day: 30, theme: "Eid / Fitr", themeAr: "فِطْر", title: "The Celebration of Purity", color: "#BA68C8",
     verseAr: "قَدْ أَفْلَحَ مَن تَزَكَّىٰ • وَذَكَرَ اسْمَ رَبِّهِ فَصَلَّىٰ", verseEn: "\"He has certainly succeeded who purifies himself. And mentions the name of his Lord and prays.\"", verseRef: "Surah Al-A'la 87:14-15",
     salat: "The Eid prayer is a communal declaration of victory over the ego. We stand together, purified.", salatSource: "Mafatih al-Jinan",
@@ -285,19 +295,73 @@ const SectionCard = ({ title, children, icon: Icon, accentColor, arabicTitle, so
 export default function App() {
   const [day, setDay] = useState(1);
   const [isExporting, setIsExporting] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [user, setUser] = useState(null);
+  
   const [mainLogoSrc, setMainLogoSrc] = useState(null);
   const [patrolLogoSrc, setPatrolLogoSrc] = useState(null);
   
-  // DEFAULT LEADERSHIP VALUES
+  // LEADERSHIP VALUES
   const [tali3aName, setTali3aName] = useState("Patrol 3");
   const [leaderName, setLeaderName] = useState("Q. Hassan Issa");
   const [assistantName, setAssistantName] = useState("Q. Mohammad Jalol");
   
   const flyerRef = useRef(null);
   const fileInputRef = useRef(null);
-  const d = DAYS_DATA[day - 1]; // Pulls directly from the robust 30-day array
+  const d = DAYS_DATA[day - 1];
 
-  // Load fixed main logo (logo.jpg is the round one the user wants permanent)
+  // 1. FIREBASE AUTHENTICATION (Anonymous = Tied to specific browser session)
+  useEffect(() => {
+    const initAuth = async () => {
+      if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+        await signInWithCustomToken(auth, __initial_auth_token);
+      } else {
+        await signInAnonymously(auth);
+      }
+    };
+    initAuth();
+    const unsubscribe = onAuthStateChanged(auth, setUser);
+    return () => unsubscribe();
+  }, []);
+
+  // 2. DATA SYNC (Load from Database)
+  useEffect(() => {
+    if (!user) return;
+    const docRef = doc(db, 'artifacts', appId, 'users', user.uid, 'profile', 'settings');
+    
+    // Listen for changes or just fetch once on mount
+    getDoc(docRef).then((snap) => {
+      if (snap.exists()) {
+        const data = snap.data();
+        setTali3aName(data.tali3aName || "Patrol 3");
+        setLeaderName(data.leaderName || "Q. Hassan Issa");
+        setAssistantName(data.assistantName || "Q. Mohammad Jalol");
+        if (data.patrolLogoSrc) setPatrolLogoSrc(data.patrolLogoSrc);
+      }
+    });
+  }, [user]);
+
+  // 3. PERSISTENCE FUNCTION
+  const saveProgress = async () => {
+    if (!user) return;
+    setIsSaving(true);
+    try {
+      const docRef = doc(db, 'artifacts', appId, 'users', user.uid, 'profile', 'settings');
+      await setDoc(docRef, {
+        tali3aName,
+        leaderName,
+        assistantName,
+        patrolLogoSrc, // Base64 strings up to 1MB are supported
+        updatedAt: new Date().toISOString()
+      }, { merge: true });
+    } catch (err) {
+      console.error("Save Error:", err);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Load fixed main logo
   useEffect(() => {
     const imagePath = "logo.jpg";
     fetch(imagePath).then(r => {
@@ -327,47 +391,53 @@ export default function App() {
 
   const handleExport = async (format) => {
     setIsExporting(true);
-    const html2canvas = (await import('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js')).default;
-    
-    if (flyerRef.current) {
-      // Ensure fonts are fully loaded before rendering to prevent broken Arabic ligatures
+    try {
+      const htmlToImage = await import('https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/+esm');
       await document.fonts.ready;
+      
       setTimeout(async () => {
-        const canvas = await window.html2canvas(flyerRef.current, { 
-          scale: 2.5, // Reduced slightly to prevent memory/render limits causing artifacting
-          useCORS: true, 
-          backgroundColor: '#063020',
-          logging: false
-        });
-        
-        if (format === 'png') {
-          const link = document.createElement('a');
-          link.download = `Daily Ramadan news letter Day ${day}.png`;
-          link.href = canvas.toDataURL('image/png');
-          link.click();
-        } else {
-          const { jsPDF } = await import('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
-          const pdf = new window.jspdf.jsPDF('p', 'mm', 'a4');
-          const imgData = canvas.toDataURL('image/png');
-          pdf.addImage(imgData, 'PNG', 0, 0, 210, (canvas.height * 210) / canvas.width);
-          pdf.save(`Daily Ramadan news letter Day ${day}.pdf`);
+        try {
+            const dataUrl = await htmlToImage.toPng(flyerRef.current, { 
+                pixelRatio: 2.5, 
+                backgroundColor: '#063020'
+            });
+            
+            if (format === 'png') {
+                const link = document.createElement('a');
+                link.download = `Daily Ramadan news letter - ${tali3aName} - Day ${day}.png`;
+                link.href = dataUrl;
+                link.click();
+            } else {
+                const { jsPDF } = await import('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+                const pdf = new window.jspdf.jsPDF('p', 'mm', 'a4');
+                const pdfWidth = pdf.internal.pageSize.getWidth();
+                const img = new Image();
+                img.src = dataUrl;
+                img.onload = () => {
+                    const pdfHeight = (img.height * pdfWidth) / img.width;
+                    pdf.addImage(dataUrl, 'PNG', 0, 0, pdfWidth, pdfHeight);
+                    pdf.save(`Daily Ramadan news letter - ${tali3aName} - Day ${day}.pdf`);
+                };
+            }
+        } catch (err) {
+            console.error("Export Error:", err);
+        } finally {
+            setIsExporting(false);
         }
-        setIsExporting(false);
       }, 500);
-    } else {
+    } catch (err) {
         setIsExporting(false);
     }
   };
 
   const footerLogoSrc = patrolLogoSrc || mainLogoSrc;
 
-  // CRITICAL ARABIC FIX: Strict letterSpacing '0px', standard font fallbacks, NO text shadows.
   const arabicTextStyle = { 
     letterSpacing: '0px', 
     fontFeatureSettings: '"liga" 1, "rlig" 1',
     fontVariantLigatures: 'normal',
     fontFamily: '"Amiri", "Arial", sans-serif',
-    textShadow: 'none' // Text shadows break html2canvas Arabic shaping
+    textShadow: 'none'
   };
 
   return (
@@ -375,7 +445,17 @@ export default function App() {
       
       {/* PERSONALIZATION PANEL */}
       <div className="w-full max-w-2xl mb-8 sm:mb-12 p-6 sm:p-8 bg-[#063020]/60 border-2 border-[#C9A227]/40 rounded-[30px] sm:rounded-[50px] backdrop-blur-2xl space-y-4 sm:space-y-6 no-print shadow-2xl">
-        <h4 className="text-[#C9A227] text-lg sm:text-2xl font-black uppercase tracking-[4px] sm:tracking-[8px] text-center mb-1 drop-shadow-md">Dhulfiqar scouts - unit 1318</h4>
+        <div className="flex justify-between items-center mb-2">
+            <h4 className="text-[#C9A227] text-xs sm:text-base font-black uppercase tracking-[4px] drop-shadow-md">Unit 1318 Profile</h4>
+            <button 
+                onClick={saveProgress}
+                disabled={isSaving || !user}
+                className="flex items-center gap-2 bg-[#C9A227] text-[#063020] px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest hover:brightness-110 transition-all disabled:opacity-50"
+            >
+                {isSaving ? <Loader2 size={12} className="animate-spin" /> : <Save size={12} />}
+                {isSaving ? 'Saving...' : 'Save for this device'}
+            </button>
+        </div>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
             <div className="flex flex-col gap-1 text-white">
@@ -408,58 +488,54 @@ export default function App() {
         </div>
       </div>
 
-      {/* FLYER ARTBOARD (RESPONSIVE WRAPPER) */}
+      {/* FLYER ARTBOARD */}
       <div className="w-full flex justify-center overflow-x-auto sm:overflow-x-visible pb-10">
         <div 
             ref={flyerRef}
             className="w-full max-w-[620px] min-w-[340px] relative bg-gradient-to-b from-[#063020] via-[#0a3d28] to-[#041a10] overflow-hidden shadow-[0_40px_100px_rgba(0,0,0,0.9)] border-x-2 border-[#C9A227]/40 pb-0"
         >
-            {/* Standard frame ornaments */}
-            <div className="absolute top-0 left-0 w-24 h-24 border-t-[8px] border-l-[8px] border-[#C9A227] rounded-tl-[40px] sm:rounded-tl-[60px] m-4 sm:m-6 opacity-90 shadow-2xl" />
-            <div className="absolute top-0 right-0 w-24 h-24 border-t-[8px] border-r-[8px] border-[#C9A227] rounded-tr-[40px] sm:rounded-tr-[60px] m-4 sm:m-6 opacity-90 shadow-2xl" />
-            <div className="absolute bottom-0 left-0 w-24 h-24 border-b-[8px] border-l-[8px] border-[#C9A227] rounded-bl-[40px] sm:rounded-bl-[60px] m-4 sm:m-6 opacity-90 shadow-2xl" />
-            <div className="absolute bottom-0 right-0 w-24 h-24 border-b-[8px] border-r-[8px] border-[#C9A227] rounded-br-[40px] sm:rounded-br-[60px] m-4 sm:m-6 opacity-90 shadow-2xl" />
+            <div className="absolute top-0 left-0 w-24 h-24 border-t-[8px] border-l-[8px] border-[#C9A227] rounded-tl-[40px] m-4 sm:m-6 opacity-90 shadow-2xl" />
+            <div className="absolute top-0 right-0 w-24 h-24 border-t-[8px] border-r-[8px] border-[#C9A227] rounded-tr-[40px] m-4 sm:m-6 opacity-90 shadow-2xl" />
+            <div className="absolute bottom-0 left-0 w-24 h-24 border-b-[8px] border-l-[8px] border-[#C9A227] rounded-bl-[40px] m-4 sm:m-6 opacity-90 shadow-2xl" />
+            <div className="absolute bottom-0 right-0 w-24 h-24 border-b-[8px] border-r-[8px] border-[#C9A227] rounded-br-[40px] m-4 sm:m-6 opacity-90 shadow-2xl" />
 
-            {/* HEADER */}
             <div className="pt-16 sm:pt-20 px-8 sm:px-12 pb-6 text-center relative z-10">
             <h2 className="text-[#C9A227] text-2xl sm:text-4xl mb-6 sm:mb-8 font-black drop-shadow-lg" style={arabicTextStyle}>بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</h2>
             
             <div className="flex items-center justify-between mb-8">
                 <Lantern className="w-16 sm:w-24 h-auto drop-shadow-[0_0_20px_rgba(201,162,39,0.6)]" />
                 <div className="flex flex-col items-center gap-2 sm:gap-4">
-                {/* FIXED TOP LOGO: logo.jpg (Round) */}
-                <div className="w-24 h-24 sm:w-40 md:w-52 aspect-square rounded-full border-[6px] sm:border-[10px] border-[#C9A227] overflow-hidden bg-[#063020] shadow-[0_0_50px_rgba(201,162,39,0.7)] relative flex items-center justify-center flex-shrink-0">
+                <div className="w-24 h-24 sm:w-40 sm:h-40 md:w-52 md:h-52 min-w-[6rem] min-h-[6rem] aspect-square rounded-full border-[6px] border-[#C9A227] overflow-hidden bg-[#063020] shadow-[0_0_50px_rgba(201,162,39,0.7)] relative flex items-center justify-center flex-shrink-0">
                     {mainLogoSrc ? (
                     <img src={mainLogoSrc} className="w-full h-full object-cover" />
                     ) : (
                     <div className="text-[#C9A227] font-black text-xs uppercase">Dhulfiqar</div>
                     )}
                 </div>
-                <h1 className="text-[#C9A227] text-[8px] sm:text-xs font-black uppercase tracking-[4px] sm:tracking-[8px] drop-shadow-xl mt-2 font-serif">Dhulfiqar Scout Team</h1>
+                <h1 className="text-[#C9A227] text-[8px] sm:text-xs font-black uppercase tracking-[4px] drop-shadow-xl mt-2 font-serif">Dhulfiqar Scout Team</h1>
                 </div>
                 <Lantern className="w-16 sm:w-24 h-auto scale-x-[-1] drop-shadow-[0_0_20px_rgba(201,162,39,0.6)]" />
             </div>
 
-            <div className="bg-gradient-to-r from-transparent via-[#C9A227]/40 to-transparent border-y-2 sm:border-y-4 border-[#C9A227]/60 py-3 mb-8">
-                <p className="text-white text-xl sm:text-4xl font-black tracking-[6px] sm:tracking-[12px] drop-shadow-md">RAMADAN MUBARAK</p>
+            <div className="bg-gradient-to-r from-transparent via-[#C9A227]/40 to-transparent border-y-2 border-[#C9A227]/60 py-3 mb-8">
+                <p className="text-white text-xl sm:text-4xl font-black tracking-[6px] drop-shadow-md">RAMADAN MUBARAK</p>
             </div>
 
-            <div className="inline-flex items-center gap-4 sm:gap-8 bg-gradient-to-r from-[#a07c18] via-[#E0B93A] to-[#a07c18] rounded-[40px] sm:rounded-[60px] px-8 sm:px-14 py-4 sm:py-6 shadow-2xl border-2 border-white/50 scale-[0.9] sm:scale-110">
+            <div className="inline-flex items-center gap-4 sm:gap-8 bg-gradient-to-r from-[#a07c18] via-[#E0B93A] to-[#a07c18] rounded-[40px] px-8 sm:px-14 py-4 sm:py-6 shadow-2xl border-2 border-white/50 scale-[0.9] sm:scale-110">
                 <span className="text-[#063020] text-4xl sm:text-7xl font-black leading-none">{day}</span>
-                <div className="w-[2px] sm:w-[4px] h-10 sm:h-16 bg-[#063020]/20" />
+                <div className="w-[2px] h-10 sm:h-16 bg-[#063020]/20" />
                 <div className="text-left leading-tight">
                 <p className="text-[#063020] text-sm sm:text-2xl font-black uppercase tracking-tight">{d.title}</p>
-                <div className="text-[#063020] text-[10px] sm:text-[15px] opacity-90 italic mt-1 sm:mt-3 font-black uppercase flex items-center gap-2">
+                <div className="text-[#063020] text-[10px] sm:text-[15px] opacity-90 italic mt-1 font-black uppercase flex items-center gap-2">
                     <span className="tracking-widest">{d.theme}</span> 
-                    <span className="font-sans tracking-normal">•</span> 
-                    <span className="tracking-normal normal-case text-lg sm:text-2xl font-bold" style={arabicTextStyle}>{d.themeAr}</span>
+                    <span className="font-sans">•</span> 
+                    <span className="text-lg sm:text-2xl font-bold" style={arabicTextStyle}>{d.themeAr}</span>
                 </div>
                 </div>
             </div>
             </div>
 
-            {/* 5 ICON BADGES */}
-            <div className="bg-black/70 border-y-4 sm:border-y-[6px] border-[#C9A227]/60 py-6 sm:py-12 flex justify-around items-center backdrop-blur-xl relative z-10">
+            <div className="bg-black/70 border-y-4 border-[#C9A227]/60 py-6 flex justify-around items-center backdrop-blur-xl relative z-10">
             <Badge icon="📖" label="Qur'an" labelAr="القُرْآن" baseColor="#10B981" />
             <Badge icon="🤲" label="Salat" labelAr="الصَّلاة" baseColor="#F59E0B" />
             <Badge icon="🌙" label="Sawm" labelAr="الصَّوْم" baseColor="#06B6D4" />
@@ -467,69 +543,45 @@ export default function App() {
             <Badge icon="⚜️" label="Scout" labelAr="الكَشَّاف" baseColor="#8B5CF6" />
             </div>
 
-            {/* CONTENT SECTIONS */}
-            <div className="p-6 sm:p-10 md:p-14 space-y-4 sm:space-y-6 relative z-10">
-            
+            <div className="p-6 sm:p-10 space-y-4 relative z-10">
             <SectionCard title="Holy Qur'an" arabicTitle="القُرْآن الكَرِيم" icon={BookOpen} accentColor="#10B981" source={d.verseRef}>
-                <p className="text-[#063020] text-3xl sm:text-5xl md:text-7xl text-center mb-6 leading-[1.8] font-bold px-2" dir="rtl" style={arabicTextStyle}>{d.verseAr}</p>
-                <p className="text-[#1a0f00] text-sm sm:text-lg md:text-xl italic text-center border-t-[2px] border-[#C9A227]/30 pt-6 px-4 leading-relaxed font-black">
-                    {d.verseEn}
-                </p>
+                <p className="text-[#063020] text-3xl sm:text-5xl text-center mb-6 leading-[1.8] font-bold px-2" dir="rtl" style={arabicTextStyle}>{d.verseAr}</p>
+                <p className="text-[#1a0f00] text-sm sm:text-lg italic text-center border-t-[2px] border-[#C9A227]/30 pt-6 px-4 leading-relaxed font-black">{d.verseEn}</p>
             </SectionCard>
 
             <SectionCard title="Salat Recommendation" arabicTitle="تَوْصِيَةُ الصَّلاة" icon={Zap} accentColor="#F59E0B" source={d.salatSource}>
-                <p className="text-[#1a0f00] text-xs sm:text-lg md:text-xl font-black leading-relaxed">{d.salat}</p>
+                <p className="text-[#1a0f00] text-xs sm:text-lg font-black leading-relaxed">{d.salat}</p>
             </SectionCard>
 
             <SectionCard title="Sawm Wisdom" arabicTitle="حِكْمَةُ الصَّوْم" icon={Moon} accentColor="#06B6D4" source={d.sawmSource}>
-                <p className="text-[#1a0f00] text-xs sm:text-lg md:text-xl italic leading-relaxed border-l-[6px] sm:border-l-[10px] border-[#06B6D4] pl-4 sm:pl-8 py-2 sm:py-3 font-black bg-[#06B6D4]/5 rounded-r-2xl sm:rounded-r-3xl">{d.sawmHadis}</p>
+                <p className="text-[#1a0f00] text-xs sm:text-lg italic leading-relaxed border-l-[6px] border-[#06B6D4] pl-4 py-2 font-black bg-[#06B6D4]/5 rounded-r-2xl">{d.sawmHadis}</p>
             </SectionCard>
 
             <SectionCard title="Sadaqah Teaching" arabicTitle="دَرْسُ الصَّدَقَة" icon={Heart} accentColor="#F43F5E" source={d.sadaqahSource}>
-                <p className="text-[#1a0f00] text-xs sm:text-lg md:text-xl italic leading-relaxed border-l-[6px] sm:border-l-[10px] border-[#F43F5E] pl-4 sm:pl-8 py-2 sm:py-3 font-black bg-[#F43F5E]/5 rounded-r-2xl sm:rounded-r-3xl">{d.sadaqahHadis}</p>
+                <p className="text-[#1a0f00] text-xs sm:text-lg italic leading-relaxed border-l-[6px] border-[#F43F5E] pl-4 py-2 font-black bg-[#F43F5E]/5 rounded-r-2xl">{d.sadaqahHadis}</p>
             </SectionCard>
 
-            {/* DAILY SUPPLICATION BLOCK - NEW BACKGROUND */}
             <SectionCard title="Scout Mission & Mahdi (aj)" arabicTitle="مُهِمَّةُ الكَشَّاف" icon={Compass} accentColor="#8B5CF6">
-                <div className="flex items-start gap-4 sm:gap-6 mb-8 sm:mb-12">
-                    <div className="p-2 sm:p-4 bg-[#8B5CF6] text-white rounded-2xl sm:rounded-3xl shadow-lg transform -rotate-6">
-                        <Award className="w-6 h-6 sm:w-9 sm:h-9" />
+                <div className="flex items-start gap-4 mb-8">
+                    <div className="p-2 bg-[#8B5CF6] text-white rounded-2xl shadow-lg transform -rotate-6">
+                        <Award className="w-6 h-6 sm:w-9" />
                     </div>
-                    <p className="text-[#063020] text-sm sm:text-xl md:text-2xl font-black leading-tight drop-shadow-sm">{d.scoutRelate}</p>
+                    <p className="text-[#063020] text-sm sm:text-xl font-black leading-tight">{d.scoutRelate}</p>
                 </div>
                 
-                <div className="bg-gradient-to-br from-[#064e3b] to-[#065f46] rounded-[30px] sm:rounded-[50px] p-8 sm:p-12 text-center border-2 sm:border-[3px] border-[#C9A227]/40 shadow-inner relative overflow-hidden">
-                    <div className="absolute top-0 left-0 w-full h-1 sm:h-2 bg-gradient-to-r from-transparent via-[#C9A227] to-transparent opacity-40" />
-                    <div className="text-[9px] sm:text-[12px] font-black uppercase text-[#C9A227] mb-6 sm:mb-10 opacity-90 font-sans flex items-center justify-center gap-2 flex-wrap">
-                        <span className="tracking-[4px] sm:tracking-[6px]">Daily Supplication</span>
-                        <span>•</span>
-                        <span className="tracking-normal normal-case" style={arabicTextStyle}>الدُّعاءُ اليَوْمِي</span>
-                    </div>
-                    {/* The text shadow is intentionally removed from the style below to prevent rendering breaks */}
-                    <p className="text-[#ecfdf5] text-3xl sm:text-6xl md:text-7xl font-serif font-bold mb-6 sm:mb-10 leading-normal" dir="rtl" style={arabicTextStyle}>{d.dailyDuaAr}</p>
-                    <div className="h-[2px] sm:h-[3px] w-24 sm:w-40 bg-[#C9A227]/50 mx-auto mb-6 sm:mb-10" />
-                    <p className="text-[#6ee7b7] text-xs sm:text-lg md:text-xl font-black italic opacity-95 px-2">"{d.dailyDuaEn}"</p>
-                    {d.dailyDuaSource && (
-                        <p className="mt-6 text-[7px] sm:text-[10px] font-black uppercase tracking-widest text-[#a7f3d0]/60 italic font-sans">Source: {d.dailyDuaSource}</p>
-                    )}
+                <div className="bg-gradient-to-br from-[#064e3b] to-[#065f46] rounded-[30px] p-8 sm:p-12 text-center border-2 border-[#C9A227]/40 shadow-inner relative overflow-hidden">
+                    <div className="text-[9px] sm:text-[12px] font-black uppercase text-[#C9A227] mb-6 tracking-[4px] sm:tracking-[6px]" style={arabicTextStyle}>الدُّعاءُ اليَوْمِي</div>
+                    <p className="text-[#ecfdf5] text-3xl sm:text-6xl font-bold mb-6 leading-normal" dir="rtl" style={arabicTextStyle}>{d.dailyDuaAr}</p>
+                    <p className="text-[#6ee7b7] text-xs sm:text-lg font-black italic opacity-95 px-2">"{d.dailyDuaEn}"</p>
                 </div>
             </SectionCard>
-
             </div>
 
-            {/* FOOTER (Grid layout to prevent overlapping) */}
-            <div className="bg-gradient-to-b from-[#C9A227] to-[#a07c18] py-12 px-6 sm:px-10 relative border-t-4 sm:border-t-[8px] border-[#063020]/30 overflow-hidden">
-                <div className="absolute top-0 left-0 right-0 h-4 bg-black/5" />
-                
-                {/* Main Flex layout preventing overlap */}
-                <div className="flex flex-col lg:flex-row justify-between items-center gap-6 relative z-10 w-full">
-                    
-                    {/* LEFT COL: Patrol Name & Logo */}
-                    <div className="flex-1 flex flex-col items-center lg:items-start justify-center gap-2 min-w-max">
-                        <div className="text-[#063020] text-center lg:text-left min-w-0">
-                            <p className="text-sm sm:text-xl font-black leading-tight break-words">{tali3aName}</p>
-                        </div>
-                        <div className="w-16 h-16 sm:w-20 sm:h-20 aspect-square flex-shrink-0 rounded-[25px] border-[3px] border-[#063020]/40 overflow-hidden bg-[#063020] flex items-center justify-center shadow-xl">
+            <div className="bg-gradient-to-b from-[#C9A227] to-[#a07c18] py-10 px-4 relative border-t-4 border-[#063020]/30 overflow-hidden">
+                <div className="grid grid-cols-3 gap-2 relative z-10 w-full items-center">
+                    <div className="flex flex-col items-center lg:items-start justify-center gap-2">
+                        <p className="text-sm sm:text-lg font-black leading-tight whitespace-nowrap text-[#063020]">{tali3aName}</p>
+                        <div className="w-16 h-16 sm:w-20 min-w-[4rem] min-h-[4rem] flex-shrink-0 aspect-square rounded-[20px] border-[3px] border-[#063020]/40 overflow-hidden bg-[#063020] flex items-center justify-center shadow-xl">
                             {footerLogoSrc ? (
                                 <img src={footerLogoSrc} className="w-full h-full object-cover" />
                             ) : (
@@ -537,32 +589,27 @@ export default function App() {
                             )}
                         </div>
                     </div>
-
-                    {/* CENTER COL: Blessing */}
-                    <div className="flex-shrink-0 text-center text-[#063020] flex flex-col items-center">
-                        <p className="text-xl sm:text-3xl md:text-4xl font-black leading-tight mb-2" style={arabicTextStyle}>تَقَبَّلَ اللَّهُ أَعْمَالَكُمْ</p>
-                        <div className="h-[2px] w-12 sm:w-20 bg-[#063020]/40 mb-2" />
-                        <p className="text-[8px] sm:text-[10px] font-black uppercase tracking-[2px] opacity-90 font-sans whitespace-nowrap">May Allah Accept<br/>Your Deeds</p>
+                    <div className="text-center text-[#063020] flex flex-col items-center">
+                        <p className="text-lg sm:text-2xl font-black leading-tight mb-2 whitespace-nowrap" style={arabicTextStyle}>تَقَبَّلَ اللَّهُ أَعْمَالَكُمْ</p>
+                        <div className="h-[2px] w-12 bg-[#063020]/40 mb-2" />
+                        <p className="text-[7px] font-black uppercase tracking-[2px] opacity-90">May Allah Accept<br/>Your Deeds</p>
                     </div>
-
-                    {/* RIGHT COL: Leadership */}
-                    <div className="flex-1 flex flex-col gap-2 items-center lg:items-end w-full lg:w-auto min-w-max">
-                        <div className="bg-[#063020]/15 px-4 py-2 rounded-lg border border-[#063020]/20 w-auto min-w-max">
-                            <span className="block text-[7px] sm:text-[8px] font-black uppercase tracking-[1px] opacity-70 font-sans leading-none mb-1 text-left">Leader</span>
-                            <p className="text-xs sm:text-sm font-black leading-tight text-left whitespace-nowrap">{leaderName}</p>
+                    <div className="flex flex-col gap-2 items-end justify-center w-full">
+                        <div className="bg-[#063020]/15 px-3 py-1.5 rounded-lg border border-[#063020]/20 w-fit max-w-full">
+                            <span className="block text-[6px] font-black uppercase tracking-[1px] opacity-70 mb-1 text-left">Leader</span>
+                            <p className="text-[10px] sm:text-xs font-black leading-tight text-left whitespace-nowrap text-[#063020]">{leaderName}</p>
                         </div>
-                        <div className="bg-[#063020]/10 px-4 py-2 rounded-lg border border-[#063020]/20 w-auto min-w-max">
-                            <span className="block text-[7px] sm:text-[8px] font-black uppercase tracking-[1px] opacity-70 font-sans leading-none mb-1 text-left">Assistant</span>
-                            <p className="text-xs sm:text-sm font-black leading-tight text-left whitespace-nowrap">{assistantName}</p>
+                        <div className="bg-[#063020]/10 px-3 py-1.5 rounded-lg border border-[#063020]/20 w-fit max-w-full">
+                            <span className="block text-[6px] font-black uppercase tracking-[1px] opacity-70 mb-1 text-left">Assistant</span>
+                            <p className="text-[10px] sm:text-xs font-black leading-tight text-left whitespace-nowrap text-[#063020]">{assistantName}</p>
                         </div>
                     </div>
                 </div>
             </div>
-
         </div>
       </div>
 
-      <div className="mt-8 sm:mt-16 text-[#C9A227]/40 text-[9px] sm:text-[12px] font-black uppercase tracking-[5px] sm:tracking-[8px] text-center pb-12 sm:pb-20 leading-loose drop-shadow-xl font-sans">
+      <div className="mt-8 text-[#C9A227]/40 text-[9px] font-black uppercase tracking-[5px] text-center pb-12 leading-loose drop-shadow-xl font-sans">
         Troop 1318 • Dearborn Heights, MI <br/> 
         <span className="text-[#C9A227]/60">The Mahdawī Ramadan Journey • Preparing the Helpers</span>
       </div>
