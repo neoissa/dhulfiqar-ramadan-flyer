@@ -1,18 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, Download, FileText, Moon, Sun, Star, Compass, BookOpen, Heart, Shield, User, Users, Flag, Upload, X, Zap, Award, Book, Info, Save, Loader2 } from 'lucide-react';
-import { initializeApp } from 'firebase/app';
-import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from 'firebase/auth';
-import { getFirestore, doc, setDoc, getDoc } from 'firebase/firestore';
 
-// --- FIREBASE INITIALIZATION ---
-const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-
-// FIX: Sanitize appId to ensure slashes do not break Firestore path segment counting (Resolves "7 segments" error)
-const rawAppId = typeof __app_id !== 'undefined' ? __app_id : 'dhulfiqar-ramadan-flyer';
-const appId = String(rawAppId).replace(/\//g, '_');
+// FIX: Removed Firebase entirely to prevent Vercel white screen.
+// Switching to native Browser 'localStorage' for "same device" saving.
 
 /* ════════════════════════════════════════════════════════════
    30-DAY SCOUTING MAHDAWĪ CONTENT
@@ -298,7 +288,6 @@ export default function App() {
   const [day, setDay] = useState(1);
   const [isExporting, setIsExporting] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [user, setUser] = useState(null);
   
   const [mainLogoSrc, setMainLogoSrc] = useState(null);
   const [patrolLogoSrc, setPatrolLogoSrc] = useState(null);
@@ -312,57 +301,38 @@ export default function App() {
   const fileInputRef = useRef(null);
   const d = DAYS_DATA[day - 1];
 
-  // 1. FIREBASE AUTHENTICATION (Awaiting Auth Rule 3)
+  // 1. DATA LOAD (Using native Browser Local Storage instead of Firebase)
   useEffect(() => {
-    const initAuth = async () => {
-      try {
-        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-          await signInWithCustomToken(auth, __initial_auth_token);
-        } else {
-          await signInAnonymously(auth);
-        }
-      } catch (err) {
-        console.error("Auth Failed:", err);
+    try {
+      const savedData = localStorage.getItem('dhulfiqar-profile');
+      if (savedData) {
+        const data = JSON.parse(savedData);
+        if (data.tali3aName) setTali3aName(data.tali3aName);
+        if (data.leaderName) setLeaderName(data.leaderName);
+        if (data.assistantName) setAssistantName(data.assistantName);
+        if (data.patrolLogoSrc) setPatrolLogoSrc(data.patrolLogoSrc);
       }
-    };
-    initAuth();
-    const unsubscribe = onAuthStateChanged(auth, setUser);
-    return () => unsubscribe();
+    } catch (err) {
+      console.error("Failed to load local storage:", err);
+    }
   }, []);
 
-  // 2. DATA LOAD (Ensuring Even Path Segments Rule 1)
-  useEffect(() => {
-    if (!user) return;
-    // Standard path format: artifacts/{appId}/users/{userId}/profile/settings
-    const docRef = doc(db, 'artifacts', appId, 'users', user.uid, 'profile', 'settings');
-    getDoc(docRef).then((snap) => {
-      if (snap.exists()) {
-        const data = snap.data();
-        setTali3aName(String(data.tali3aName || "Patrol 3"));
-        setLeaderName(String(data.leaderName || "Q. Hassan Issa"));
-        setAssistantName(String(data.assistantName || "Q. Mohammad Jalol"));
-        if (data.patrolLogoSrc) setPatrolLogoSrc(String(data.patrolLogoSrc));
-      }
-    }).catch(err => console.error("Firestore Load Error:", err));
-  }, [user]);
-
-  // 3. PERSISTENCE FUNCTION
-  const saveProgress = async () => {
-    if (!user) return;
+  // 2. PERSISTENCE FUNCTION (Saving directly to the device browser)
+  const saveProgress = () => {
     setIsSaving(true);
     try {
-      const docRef = doc(db, 'artifacts', appId, 'users', user.uid, 'profile', 'settings');
-      await setDoc(docRef, {
-        tali3aName: String(tali3aName),
-        leaderName: String(leaderName),
-        assistantName: String(assistantName),
-        patrolLogoSrc: patrolLogoSrc ? String(patrolLogoSrc) : null,
-        updatedAt: new Date().toISOString()
-      }, { merge: true });
+      const dataToSave = {
+        tali3aName,
+        leaderName,
+        assistantName,
+        patrolLogoSrc
+      };
+      localStorage.setItem('dhulfiqar-profile', JSON.stringify(dataToSave));
     } catch (err) {
-      console.error("Save Error:", err);
+      console.error("Save Error (Image might be too large):", err);
+      alert("Could not save. If you uploaded a very large logo, try a smaller image file.");
     } finally {
-      setIsSaving(false);
+      setTimeout(() => setIsSaving(false), 500); // Visual feedback delay
     }
   };
 
@@ -448,19 +418,19 @@ export default function App() {
       
       {/* PERSONALIZATION PANEL */}
       <div className="w-full max-w-2xl mb-8 sm:mb-12 p-6 sm:p-8 bg-[#063020]/60 border-2 border-[#C9A227]/40 rounded-[30px] sm:rounded-[50px] backdrop-blur-2xl space-y-4 sm:space-y-6 no-print shadow-2xl">
-        <div className="flex justify-between items-center mb-2">
-            <h4 className="text-[#C9A227] text-xs sm:text-base font-black uppercase tracking-[4px] drop-shadow-md">Unit 1318 Profile</h4>
-            <button 
-                onClick={saveProgress}
-                disabled={isSaving || !user}
-                className="flex items-center gap-2 bg-[#C9A227] text-[#063020] px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest hover:brightness-110 transition-all disabled:opacity-50"
-            >
-                {isSaving ? <Loader2 size={12} className="animate-spin" /> : <Save size={12} />}
-                {isSaving ? 'Saving...' : 'Save for this device'}
-            </button>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
+    <div className="flex justify-between items-center mb-2">
+        <h4 className="text-[#C9A227] text-xs sm:text-base font-black uppercase tracking-[4px] drop-shadow-md">Unit 1318 Profile</h4>
+        <button 
+            onClick={saveProgress}
+            disabled={isSaving}
+            className="flex items-center gap-2 bg-[#C9A227] text-[#063020] px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest hover:brightness-110 transition-all disabled:opacity-50"
+        >
+            {isSaving ? <Loader2 size={12} className="animate-spin" /> : <Save size={12} />}
+            {isSaving ? 'Saving...' : 'Save for this device'}
+        </button>
+    </div>
+    
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
             <div className="flex flex-col gap-1 text-white">
                 <label className="text-[10px] text-[#C9A227] uppercase font-black ml-1">Patrol Name</label>
                 <input value={tali3aName} onChange={(e) => setTali3aName(e.target.value)} placeholder="Tali3a Name" className="bg-black/40 border-2 border-[#C9A227]/30 rounded-xl px-4 py-2 text-white text-xs sm:text-sm outline-none focus:border-[#C9A227] transition-all" />
